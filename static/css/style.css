@@ -1,0 +1,173 @@
+html{
+    position: relative;    
+}
+html, body{
+    min-height: 100%;
+}
+body{
+    /* Default background */
+    background: linear-gradient(to bottom right, blue, pink);
+    color: #fff;
+}
+.container{
+    padding-bottom: 60px;
+}
+
+a:hover{
+    text-decoration: none;
+}
+
+h2 a{
+    transition: 0.1s;
+}
+h2 a:hover{
+    color: #ffe946 !important;
+}
+
+.section-title{
+    margin-top: 50px;
+}
+
+.section-title h1{
+    font-size: 50px;
+}
+
+.section-title h2{
+    font-size: 20px;
+}
+
+.section-description{
+    margin-top: 30px;
+    padding: 0 5px;
+}
+
+#geolocation {
+    margin-right: 5px;
+}
+#geolocation i{
+    position: relative;
+    top: 1px;
+    cursor: pointer;
+    font-size: 25px;
+    color: #aaa;
+}
+#geolocation:hover i{
+    color: #fff;
+}
+
+/* Weather */
+#meteo-title{
+    text-align: center;
+    margin-top: 25px;
+    color: #fff;
+}
+.text-muted{
+    color: #fff587 !important;
+}
+
+.section-meteo{
+    margin-top: 25px;
+}
+
+.meteo-day{
+    background-color: rgba(255,255,255,0.2);
+    margin: 5px 5px;
+    padding: 10px 25px;
+    border-radius: 5px;
+    border: 1px solid #eee;
+    border-bottom: 3px solid #ddd;
+    transition: 0.1s;
+    box-shadow: 0px 5px 5px rgba(0,0,0,0.05);
+}
+
+
+.meteo-day:hover{
+    background-color: rgba(255,255,255,0.25);
+    box-shadow: 0px 5px 5px rgba(0,0,0,0.15);
+}
+
+.meteo-day h3{
+    text-align: center;
+    margin-top: 10px;
+}
+
+.meteo-block{
+    margin: 5px 5px;
+    text-align: center;
+    height: 50px;
+}
+
+.meteo-block-title{
+    font-size: 16px !important;
+    color: #444;
+}
+
+.meteo-block-data{
+    margin-top: 8px;
+    font-size: 18px;
+}
+
+.meteo-temperature-container{
+    padding-top: 5px;
+    height: 50px;
+}
+.meteo-temperature {
+    margin: 0 auto;
+    font-size: 30px;
+}
+
+.meteo-temperature .wi{
+    color: rgba(54, 50, 50, 0.6);
+}
+.meteo-block-data{
+    /* background-color: rgba(54, 50, 50, 0.8); */
+    color: #fff;
+    font-weight: 700;
+}
+
+
+.donate-now {
+  list-style-type: none;
+  margin: 25px 0 0 0;
+  padding: 0;
+}
+
+.donate-now li {
+  float: left;
+  margin: 0 5px 0 0;
+  width: 100px;
+  height: 40px;
+  position: relative;
+}
+
+.donate-now label,
+.donate-now input {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.donate-now input[type="radio"] {
+  opacity: 0.01;
+  z-index: 100;
+}
+
+.donate-now input[type="radio"]:checked+label,
+.Checked+label {
+  background: rgba(255,255,255,0.2);
+}
+
+.donate-now label {
+  padding: 5px;
+  border: 1px solid #CCC;
+  cursor: pointer;
+  z-index: 90;
+  text-align: center;
+}
+
+.donate-now label:hover {
+  background: #DDD;
+}

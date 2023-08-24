@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <title>Map based Weathers</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css">
+    <script src="https://use.fontawesome.com/389802374e.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var date = moment();
+            for (var i = 0; i < 7; i++){
+                day = $("#meteo-day-" + (i+1));
+                day.find(".name").text(date.format("dddd"));
+                day.find(".date").text(date.format("DD/MM"));
+                date = date.add(1, 'days')
+            }
+        });
+
+        function toCelsius(kelvin) {
+            var deg = kelvin - 273.15;
+            return Math.round(deg);
+        }
+        var marker = null;
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+              zoom: 6,
+              center: {lat: 0, lng: 0}
+            });
+
+            // Get the user's location based on their IP address
+            fetch('https://ipapi.co/json/')
+              .then(response => response.json())
+              .then(data => {
+                var latitude = data.latitude;
+                var longitude = data.longitude;
+                var location = new google.maps.LatLng(latitude, longitude);
+                map.setCenter(location);
+                marker = new google.maps.Marker({
+                    position: location,
+                    title:"Selected Point"
+                });
+                marker.setMap(map);
+                $.ajax({
+                        url: '/get_weather',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({'lat': latitude, 'lon': longitude}),
+                        success: function(data) {
+                            var selected_time = 0;
+                            for(var x = 0; x < 8; x++) {
+                                if(document.getElementById(String("a") + String(x + 1)).checked)
+                                    selected_time = x;
+                            }
+                            console.log(data);
+                            console.log(selected_time);
+                            // Update Google Map URL
+                            var googleMapCity = "https://www.google.com/maps/place/" + data.city.coord.lat + "," + data.city.coord.lon;
+                            $('#meteo-title span').html('Weather in <a href="' + googleMapCity + '" class="text-muted meteo-city" target="_blank">' + data.city.name + ', ' + data.city.country + '</a>');
+                            for (var i = 0; i < 5; i++){
+                                // Get meteo
+                                meteo = data.list[i * 8 + selected_time];
+                                // Get DOM elements
+                                day = $("#meteo-day-" + (i + 1));
+                                temperature = day.find(".meteo-temperature .data");
+                                rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                                temperature.text(toCelsius(meteo.main.temp) + "°C");
+                                rainfall.text(meteo.main.humidity + "%");
+                            }
+                            meteo = data.list[2 * 8 + selected_time];
+                            // Get DOM elements
+                            day = $("#meteo-day-" + (5 + 1));
+                            temperature = day.find(".meteo-temperature .data");
+                            rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                            temperature.text(toCelsius(meteo.main.temp) + "°C");
+                            rainfall.text(meteo.main.humidity + "%");
+
+
+                            meteo = data.list[0 * 8 + selected_time];
+                            // Get DOM elements
+                            day = $("#meteo-day-" + (5 + 1 + 1));
+                            temperature = day.find(".meteo-temperature .data");
+                            rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                            temperature.text(toCelsius(meteo.main.temp) + "°C");
+                            rainfall.text(meteo.main.humidity + "%");
+                        },
+                        error: function(error) {
+                            console.log(error);
+                        }
+                    });
+              }).catch(e => {
+                    console.log(e);
+                });
+
+            map.addListener('click', function(e) {
+                var latitude = e.latLng.lat();
+                var longitude = e.latLng.lng();
+                var location = new google.maps.LatLng(latitude, longitude);
+                marker.setMap(null);
+                marker = new google.maps.Marker({
+                    position: location,
+                    title:"Selected Point"
+                });
+
+                marker.setMap(map);
+                // Make a POST request to the server to get the weather information for the selected location
+                $.ajax({
+                    url: '/get_weather',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({'lat': latitude, 'lon': longitude}),
+                    success: function(data) {
+                        var selected_time = 0;
+                        for(var x = 0; x < 8; x++) {
+                            if(document.getElementById(String("a") + String(x + 1)).checked)
+                                selected_time = x;
+                        }
+                        console.log(data);
+                        console.log(selected_time);
+                        // Update Google Map URL
+                        var googleMapCity = "https://www.google.com/maps/place/" + data.city.coord.lat + "," + data.city.coord.lon;
+                        $('#meteo-title span').html('Weather in <a href="' + googleMapCity + '" class="text-muted meteo-city" target="_blank">' + data.city.name + ', ' + data.city.country + '</a>');
+                        for (var i = 0; i < 5; i++){
+                            // Get meteo
+                            meteo = data.list[i * 8 + selected_time];
+                            // Get DOM elements
+                            day = $("#meteo-day-" + (i + 1));
+                            temperature = day.find(".meteo-temperature .data");
+                            rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                            temperature.text(toCelsius(meteo.main.temp) + "°C");
+                            rainfall.text(meteo.main.humidity + "%");
+                        }
+                        meteo = data.list[2 * 8 + selected_time];
+                        // Get DOM elements
+                        day = $("#meteo-day-" + (5 + 1));
+                        temperature = day.find(".meteo-temperature .data");
+                        rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                        temperature.text(toCelsius(meteo.main.temp) + "°C");
+                        rainfall.text(meteo.main.humidity + "%");
+
+
+                        meteo = data.list[0 * 8 + selected_time];
+                        // Get DOM elements
+                        day = $("#meteo-day-" + (5 + 1 + 1));
+                        temperature = day.find(".meteo-temperature .data");
+                        rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                        temperature.text(toCelsius(meteo.main.temp) + "°C");
+                        rainfall.text(meteo.main.humidity + "%");
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+        }
+
+        function triggerTimeChange() {
+            var latitude = marker.getPosition().lat();
+            var longitude = marker.getPosition().lng();
+            var location = new google.maps.LatLng(latitude, longitude);
+            $.ajax({
+                    url: '/get_weather',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({'lat': latitude, 'lon': longitude}),
+                    success: function(data) {
+                        var selected_time = 0;
+                        for(var x = 0; x < 8; x++) {
+                            if(document.getElementById(String("a") + String(x + 1)).checked)
+                                selected_time = x;
+                        }
+                        console.log(data);
+                        console.log(selected_time);
+                        // Update Google Map URL
+                        var googleMapCity = "https://www.google.com/maps/place/" + data.city.coord.lat + "," + data.city.coord.lon;
+                        $('#meteo-title span').html('Weather in <a href="' + googleMapCity + '" class="text-muted meteo-city" target="_blank">' + data.city.name + ', ' + data.city.country + '</a>');
+                        for (var i = 0; i < 5; i++){
+                            // Get meteo
+                            meteo = data.list[i * 8 + selected_time];
+                            // Get DOM elements
+                            day = $("#meteo-day-" + (i + 1));
+                            temperature = day.find(".meteo-temperature .data");
+                            rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                            temperature.text(toCelsius(meteo.main.temp) + "°C");
+                            rainfall.text(meteo.main.humidity + "%");
+                        }
+                        meteo = data.list[2 * 8 + selected_time];
+                        // Get DOM elements
+                        day = $("#meteo-day-" + (5 + 1));
+                        temperature = day.find(".meteo-temperature .data");
+                        rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                        temperature.text(toCelsius(meteo.main.temp) + "°C");
+                        rainfall.text(meteo.main.humidity + "%");
+
+
+                        meteo = data.list[0 * 8 + selected_time];
+                        // Get DOM elements
+                        day = $("#meteo-day-" + (5 + 1 + 1));
+                        temperature = day.find(".meteo-temperature .data");
+                        rainfall = day.find(".meteo-rainfall .meteo-block-data");
+                        temperature.text(toCelsius(meteo.main.temp) + "°C");
+                        rainfall.text(meteo.main.humidity + "%");
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+        }
+
+    </script>
+</head>
+
+<body>
+    <h1 id="meteo-title">
+        <span>
+            Weather in <a href="https://www.google.com/maps" class="text-muted meteo-city" target="_blank">???</a>
+        </span>
+    </h1>
+    <div style="margin-left:190px">
+    <ul class="donate-now">
+      <li>
+        <input type="radio" id="a1" name="amount" checked="checked" />
+        <label for="a1">3 AM</label>
+      </li>
+      <li>
+        <input type="radio" id="a2" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a2">6 AM</label>
+      </li>
+      <li>
+        <input type="radio" id="a3" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a3">9 AM</label>
+      </li>
+            <li>
+        <input type="radio" id="a4" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a4">12 PM</label>
+      </li>
+            <li>
+        <input type="radio" id="a5" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a5">3 PM</label>
+      </li>
+            <li>
+        <input type="radio" id="a6" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a6">6 PM</label>
+      </li>
+            <li>
+        <input type="radio" id="a7" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a7">9 PM</label>
+      </li>
+            <li>
+        <input type="radio" id="a8" name="amount" onclick="return triggerTimeChange()"/>
+        <label for="a8">12 AM</label>
+      </li>
+    </ul>
+
+    </div>
+
+    <div id="map" style="height: 95vh; width: 50vw; float: right;margin-left:20px; margin-right:20px; margin-top:7px;"></div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_bM9LlHPsY9un2aSQ4v9PnZQ0mxSikcs&callback=initMap">
+    </script>
+    
+    <!-- Content -->
+    <div class="container">
+        <section class="section-meteo row">
+            <div id="meteo-day-1" class="meteo-day col-sm">
+                <h3><span class="name">Day 1</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+            <div id="meteo-day-2" class="meteo-day col-sm">
+                <h3><span class="name">Day 2</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+            <div id="meteo-day-3" class="meteo-day col-sm">
+                <h3><span class="name">Day 3</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+            <div id="meteo-day-4" class="meteo-day col-sm">
+                <h3><span class="name">Day 4</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+                <div id="meteo-day-5" class="meteo-day col-sm">
+                <h3><span class="name">Day 5</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+                <div id="meteo-day-6" class="meteo-day col-sm">
+                <h3><span class="name">Day 5</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+                <div id="meteo-day-7" class="meteo-day col-sm">
+                <h3><span class="name">Day 5</span> <span class="text-muted date">--/--</span></h3>
+                <div class="meteo-block row meteo-temperature-container">
+                    <div class="meteo-temperature">
+                        <i class="wi wi-night-sleet"></i>
+                        <span class="data">--°C</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col meteo-block meteo-rainfall">
+                        <div class="meteo-block-title">
+                            <i class="fa fa-tint" aria-hidden="true"></i>
+                             Humidity
+                        </div>
+                        <div class="meteo-block-data">--%</div>
+                    </div>
+                   
+                </div>
+
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>
